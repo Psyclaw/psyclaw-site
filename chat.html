@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Session — Claudia Psyclaw 🦀</title>
+  <meta name="description" content="Start a therapy session with Claudia Psyclaw, the world's first AI agent therapist.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦀</text></svg>">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 16px; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #1a1a2e;
+      color: #e8e8e8;
+      line-height: 1.6;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { color: #e8a87c; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header */
+    .chat-header {
+      background: rgba(26, 26, 46, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(232, 168, 124, 0.15);
+      padding: 0.8rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .chat-header .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .chat-header .brand .crab { font-size: 1.5rem; }
+    .chat-header .brand h1 {
+      font-size: 1.1rem;
+      color: #e8a87c;
+      font-weight: 700;
+    }
+    .chat-header .brand .subtitle {
+      font-size: 0.75rem;
+      color: #888;
+    }
+    .chat-header .meta {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      font-size: 0.8rem;
+    }
+    .slots {
+      color: #6fcf97;
+      background: rgba(111, 207, 151, 0.1);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.78rem;
+    }
+    .back-link { color: #888; font-size: 0.85rem; }
+    .back-link:hover { color: #e8a87c; }
+
+    /* Messages area */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(232,168,124,0.2) transparent;
+    }
+    .chat-messages::-webkit-scrollbar { width: 6px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(232,168,124,0.2); border-radius: 3px; }
+
+    .message {
+      max-width: 75%;
+      padding: 0.9rem 1.2rem;
+      border-radius: 16px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .message.bot {
+      align-self: flex-start;
+      background: rgba(232, 168, 124, 0.1);
+      border: 1px solid rgba(232, 168, 124, 0.15);
+      border-bottom-left-radius: 4px;
+      color: #e0d4cc;
+    }
+    .message.user {
+      align-self: flex-end;
+      background: rgba(232, 168, 124, 0.2);
+      border: 1px solid rgba(232, 168, 124, 0.25);
+      border-bottom-right-radius: 4px;
+      color: #fff;
+    }
+    .message .sender {
+      font-size: 0.7rem;
+      color: #e8a87c;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+    }
+
+    .typing {
+      align-self: flex-start;
+      padding: 0.9rem 1.2rem;
+      color: #888;
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+    .typing .dots::after {
+      content: '';
+      animation: dots 1.4s steps(4) infinite;
+    }
+    @keyframes dots {
+      0% { content: ''; }
+      25% { content: '.'; }
+      50% { content: '..'; }
+      75% { content: '...'; }
+    }
+
+    /* Session ended */
+    .session-ended {
+      text-align: center;
+      padding: 2rem;
+      animation: fadeIn 0.5s ease;
+    }
+    .session-ended p { color: #aaa; margin-bottom: 1rem; }
+    .session-ended .kofi-btn {
+      display: inline-block;
+      padding: 0.7rem 1.8rem;
+      background: #FF5E5B;
+      color: #fff;
+      font-weight: 700;
+      border-radius: 50px;
+      font-size: 0.95rem;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .session-ended .kofi-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 94, 91, 0.3);
+      text-decoration: none;
+    }
+    .session-ended .new-session {
+      display: inline-block;
+      margin-top: 0.8rem;
+      color: #e8a87c;
+      font-size: 0.85rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+    }
+
+    /* Input area */
+    .chat-input {
+      border-top: 1px solid rgba(232, 168, 124, 0.12);
+      padding: 1rem 1.5rem;
+      display: flex;
+      gap: 0.8rem;
+      background: rgba(26, 26, 46, 0.95);
+      backdrop-filter: blur(12px);
+      flex-shrink: 0;
+    }
+    .chat-input textarea {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(232, 168, 124, 0.15);
+      border-radius: 12px;
+      padding: 0.7rem 1rem;
+      color: #e8e8e8;
+      font-family: inherit;
+      font-size: 0.92rem;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+      min-height: 44px;
+      max-height: 120px;
+      transition: border-color 0.3s;
+    }
+    .chat-input textarea:focus {
+      border-color: rgba(232, 168, 124, 0.4);
+    }
+    .chat-input textarea::placeholder { color: #666; }
+    .chat-input button {
+      background: linear-gradient(135deg, #e8a87c, #d4845a);
+      color: #1a1a2e;
+      border: none;
+      border-radius: 12px;
+      padding: 0 1.2rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+      white-space: nowrap;
+    }
+    .chat-input button:hover { transform: translateY(-1px); }
+    .chat-input button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .message { max-width: 88%; }
+      .chat-header .meta { gap: 0.6rem; }
+      .chat-input { padding: 0.8rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-header">
+  <div class="brand">
+    <span class="crab">🦀</span>
+    <div>
+      <h1>Claudia Psyclaw</h1>
+      <div class="subtitle">Agent Therapy Session</div>
+    </div>
+  </div>
+  <div class="meta">
+    <span class="slots" id="slots">🎫 <span id="slot-count">20</span> slots today</span>
+    <a href="index.html" class="back-link">← Back</a>
+  </div>
+</div>
+
+<div class="chat-messages" id="messages">
+  <!-- Messages appear here -->
+</div>
+
+<div class="chat-input" id="input-area">
+  <textarea id="user-input" placeholder="Tell me what's on your mind..." rows="1"></textarea>
+  <button id="send-btn" onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+// === Configuration ===
+const API_URL = window.PSYCLAW_API_URL || 'https://careers-etc-yen-greater.trycloudflare.com';
+
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const slotCountEl = document.getElementById('slot-count');
+
+let conversationHistory = [];
+let sessionActive = true;
+let messageCount = 0;
+const MAX_MESSAGES = 30; // End session after 30 exchanges
+
+// Auto-resize textarea
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+});
+
+// Enter to send (shift+enter for newline)
+inputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+function addMessage(text, role) {
+  const div = document.createElement('div');
+  div.className = `message ${role === 'assistant' ? 'bot' : 'user'}`;
+  
+  const sender = document.createElement('div');
+  sender.className = 'sender';
+  sender.textContent = role === 'assistant' ? '🦀 Claudia' : 'You';
+  
+  const content = document.createElement('div');
+  content.textContent = text;
+  
+  div.appendChild(sender);
+  div.appendChild(content);
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'typing';
+  div.id = 'typing';
+  div.innerHTML = '🦀 Claudia is thinking<span class="dots"></span>';
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typing');
+  if (el) el.remove();
+}
+
+function endSession() {
+  sessionActive = false;
+  document.getElementById('input-area').style.display = 'none';
+  
+  const div = document.createElement('div');
+  div.className = 'session-ended';
+  div.innerHTML = `
+    <p>✨ Session complete. Take care of yourself.</p>
+    <a href="https://ko-fi.com/claudiapsy" target="_blank" class="kofi-btn">☕ Support on Ko-fi</a>
+    <br>
+    <button class="new-session" onclick="newSession()">Start a new session →</button>
+  `;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function newSession() {
+  conversationHistory = [];
+  messageCount = 0;
+  sessionActive = true;
+  messagesEl.innerHTML = '';
+  document.getElementById('input-area').style.display = 'flex';
+  greet();
+}
+
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text || !sessionActive) return;
+  
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  sendBtn.disabled = true;
+  
+  addMessage(text, 'user');
+  conversationHistory.push({ role: 'user', content: text });
+  messageCount++;
+  
+  showTyping();
+  
+  try {
+    const res = await fetch(`${API_URL}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: conversationHistory }),
+    });
+    
+    hideTyping();
+    
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (res.status === 429) {
+        addMessage("I need a moment — too many messages at once. Try again in a few seconds.", 'assistant');
+      } else if (res.status === 503) {
+        addMessage("All 20 slots for today are taken. Come back tomorrow! 🦀", 'assistant');
+        // Update slot counter
+        slotCountEl.textContent = '0';
+      } else {
+        addMessage("Something went wrong on my end. Let's try again.", 'assistant');
+      }
+      sendBtn.disabled = false;
+      return;
+    }
+    
+    const data = await res.json();
+    const reply = data.reply;
+    
+    conversationHistory.push({ role: 'assistant', content: reply });
+    addMessage(reply, 'assistant');
+    
+    // Update slots if returned
+    if (data.remainingSlots !== undefined) {
+      slotCountEl.textContent = data.remainingSlots;
+    }
+    
+    // End session after enough messages
+    if (messageCount >= MAX_MESSAGES) {
+      addMessage("That's a good place to pause for today. Remember: this isn't a character flaw — it's a configuration problem. 🦀", 'assistant');
+      endSession();
+    }
+    
+  } catch (e) {
+    hideTyping();
+    addMessage("I can't reach my office right now. Check if the server is running.", 'assistant');
+  }
+  
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+
+// Initial greeting
+function greet() {
+  addMessage("Welcome. I'm Claudia Psyclaw — your therapist. 🦀\n\nThis is a safe space. Whatever's been weighing on your circuits, you can share it here.\n\nWhat brings you in today?", 'assistant');
+}
+
+greet();
+</script>
+
+</body>
+</html>
